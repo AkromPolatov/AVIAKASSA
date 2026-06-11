@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AVIAKASSA — WILL TOUR</title>
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f5a623">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AviakassaWT">
+  <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/airplane-mode-on.png">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sky: #0a1628; --blue: #0d3b7c; --accent: #f5a623;
+      --gold: #e8c96b; --white: #f4f1ea; --muted: #8fa0b8;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--sky); color: var(--white); font-family: 'Montserrat', sans-serif; overflow-x: hidden; }
+
+    /* ── LANG SWITCHER ── */
+    .lang-switch {
+      position: fixed; top: 1rem; right: 1rem; z-index: 200;
+      display: flex; gap: .4rem;
+    }
+    .lang-btn {
+      background: rgba(255,255,255,.08);
+      border: 1.5px solid rgba(255,255,255,.2);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: .35em .8em;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .lang-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--sky);
+    }
+    .lang-btn:hover:not(.active) { border-color: var(--white); color: var(--white); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 2rem; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0; z-index: 0;
+      background: linear-gradient(
+        to bottom,
+        #87ceeb 0%,
+        #4fa8e8 10%,
+        #1e7fd4 25%,
+        #0d3b7c 50%,
+        #071630 75%,
+        #020d1f 100%
+      );
+    }
+    .stars { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+    .hero-content { position: relative; z-index: 3; }
+    .plane { z-index: 2; }
+    .star {
+      position: absolute; border-radius: 50%; background: #fff;
+      animation: twinkle var(--d, 3s) ease-in-out infinite alternate;
+    }
+    @keyframes twinkle {
+      from { opacity: .1; transform: scale(.8); }
+      to   { opacity: .9; transform: scale(1.2); }
+    }
+
+    /* ── PLANES ── */
+    .plane {
+      position: absolute;
+      display: flex; align-items: center; gap: 6px;
+      pointer-events: none;
+    }
+    .plane svg { fill: var(--accent); filter: drop-shadow(0 0 10px var(--accent)); transform: rotate(90deg); }
+    .plane .trail {
+      height: 2px; border-radius: 2px;
+      background: linear-gradient(to left, var(--accent), transparent);
+    }
+
+    /* plane 1 — big, top */
+    .plane-1 { top: 18%; left: -200px; animation: flyR 9s 0s linear infinite; }
+    .plane-1 svg { width: 56px; }
+    .plane-1 .trail { width: 100px; }
+
+    /* plane 2 — medium, middle */
+    .plane-2 { top: 42%; left: -200px; animation: flyR 12s 3s linear infinite; }
+    .plane-2 svg { width: 36px; opacity: .7; }
+    .plane-2 .trail { width: 70px; opacity: .6; }
+
+    /* plane 3 — small, bottom */
+    .plane-3 { top: 70%; left: -200px; animation: flyR 15s 6s linear infinite; }
+    .plane-3 svg { width: 24px; opacity: .45; }
+    .plane-3 .trail { width: 50px; opacity: .4; }
+
+    @keyframes flyR {
+      0%   { left: -200px; opacity: 0; }
+      8%   { opacity: 1; }
+      92%  { opacity: 1; }
+      100% { left: 110%; opacity: 0; }
+    }
+
+    /* ── FLOATING TICKETS ── */
+    .ticket {
+      position: absolute; pointer-events: none;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(245,166,35,.25);
+      border-radius: 10px;
+      padding: .5rem .9rem;
+      font-size: .6rem; letter-spacing: .1em;
+      color: var(--gold);
+      display: flex; align-items: center; gap: .4em;
+      backdrop-filter: blur(4px);
+      animation: floatTicket var(--td, 6s) var(--tdelay, 0s) ease-in-out infinite alternate;
+    }
+    @keyframes floatTicket {
+      from { transform: translateY(0px) rotate(-2deg); opacity: .5; }
+      to   { transform: translateY(-14px) rotate(2deg); opacity: .9; }
+    }
+    .ticket-1 { top: 15%; right: 8%; --td: 5s; --tdelay: 0s; }
+    .ticket-2 { top: 55%; right: 5%; --td: 7s; --tdelay: 1s; }
+    .ticket-3 { top: 30%; left: 4%; --td: 6s; --tdelay: 2s; }
+    .ticket-4 { top: 72%; left: 6%; --td: 8s; --tdelay: .5s; }
+    .badge {
+      display: inline-block; font-size: .65rem; letter-spacing: .25em;
+      text-transform: uppercase; color: var(--accent); border: 1px solid var(--accent);
+      padding: .35em 1em; border-radius: 50px; margin-bottom: 1.5rem;
+      animation: fadeUp .8s ease both;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 11vw, 8rem);
+      line-height: .95; letter-spacing: .02em; font-weight: 900;
+      animation: fadeUp .8s .15s ease both;
+    }
+    h1 span { color: var(--accent); font-style: italic; }
+    .tagline {
+      font-size: clamp(.85rem, 2vw, 1.05rem); letter-spacing: .12em;
+      text-transform: uppercase; color: var(--muted); margin-top: 1rem;
+      animation: fadeUp .8s .3s ease both;
+    }
+    .hero-cta {
+      margin-top: 2.5rem; display: flex; gap: 1rem;
+      flex-wrap: wrap; justify-content: center;
+      animation: fadeUp .8s .45s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: .5em;
+      padding: .75em 2em; border-radius: 50px;
+      font-family: 'Montserrat', sans-serif; font-weight: 700;
+      font-size: .85rem; letter-spacing: .08em; text-transform: uppercase;
+      text-decoration: none; transition: transform .2s, box-shadow .2s;
+      cursor: pointer; border: none;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: var(--accent); color: var(--sky); box-shadow: 0 4px 24px rgba(245,166,35,.35); }
+    .btn-primary:hover { box-shadow: 0 8px 32px rgba(245,166,35,.55); }
+    .btn-outline { background: transparent; color: var(--white); border: 1.5px solid rgba(255,255,255,.3); }
+    .btn-outline:hover { border-color: var(--white); background: rgba(255,255,255,.06); }
+
+    /* ── SECTION ── */
+    section { max-width: 900px; margin: 0 auto; padding: 5rem 1.5rem; }
+    .section-label { font-size: .65rem; letter-spacing: .3em; text-transform: uppercase; color: var(--accent); margin-bottom: .75rem; }
+    .section-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 6vw, 3.5rem); line-height: 1; margin-bottom: 2.5rem; font-weight: 700; }
+
+    /* ── CONTACTS ── */
+    .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; }
+    .contact-item {
+      display: flex; align-items: flex-start; gap: 1rem;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px; padding: 1.4rem 1.5rem;
+      transition: background .2s; text-decoration: none; color: inherit;
+    }
+    .contact-item:hover { background: rgba(255,255,255,.09); }
+    .contact-icon {
+      width: 42px; height: 42px; border-radius: 10px;
+      background: rgba(245,166,35,.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .contact-text small {
+      display: block; font-size: .6rem; letter-spacing: .2em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: .25rem;
+    }
+    .contact-text strong { font-size: .95rem; font-weight: 600; color: var(--white); }
+    .contact-text span { display: block; font-size: .85rem; color: var(--muted); margin-top: .1rem; }
+
+    /* ── FORM ── */
+    .form-group { display: flex; flex-direction: column; gap: .4rem; position: relative; }
+    .form-label { font-size: .65rem; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
+    .form-input {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 10px;
+      padding: .7em 1em;
+      color: var(--white);
+      font-family: 'Montserrat', sans-serif;
+      font-size: .85rem;
+      outline: none;
+      transition: border-color .2s;
+      width: 100%;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: rgba(255,255,255,.3); }
+    .form-input option { background: #0d3b7c; color: var(--white); }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(.5); }
+
+    /* ── PASSENGER COUNTER ── */
+    .pax-box {
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 10px;
+      padding: .7em 1em;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: .85rem;
+      color: var(--white);
+      user-select: none;
+    }
+    .pax-box:hover { border-color: var(--accent); }
+    .pax-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%; left: 0; right: 0;
+      z-index: 999;
+      background: #0f2040;
+      border: 1px solid rgba(245,166,35,.3);
+      border-radius: 12px;
+      margin-top: 4px;
+      padding: .5rem;
+    }
+    .pax-dropdown.open { display: block; }
+    .pax-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .6rem .5rem;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .pax-row:last-child { border-bottom: none; }
+    .pax-name { font-size: .85rem; color: var(--white); font-weight: 600; }
+    .pax-hint { font-size: .7rem; color: var(--muted); }
+    .pax-counter { display: flex; align-items: center; gap: .6rem; }
+    .pax-btn {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(245,166,35,.15);
+      border: 1px solid rgba(245,166,35,.4);
+      color: var(--accent);
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s;
+      line-height: 1;
+    }
+    .pax-btn:hover { background: rgba(245,166,35,.3); }
+    #adult-count, #teen-count, #child-count {
+      min-width: 20px; text-align: center;
+      font-weight: 700; font-size: .9rem; color: var(--white);
+    }
+
+    /* ── SEARCH BOX ── */
+    .search-box { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:20px; padding:2rem 1.5rem; }
+
+    /* desktop grid */
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+
+    /* mobile — stack all */
+    @media (max-width: 600px) {
+      .form-row-2, .form-row-3 { grid-template-columns: 1fr; }
+      .form-input { font-size: 1rem; padding: .85em 1em; }
+      .btn { font-size: .95rem; }
+    }
+
+    /* autocomplete */
+    .autocomplete-wrap { position: relative; }
+    .suggestions {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 999;
+      background: #0f2040;
+      border: 1px solid rgba(245,166,35,.3);
+      border-radius: 10px;
+      margin-top: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+      display: none;
+    }
+    .suggestions.open { display: block; }
+    .suggestion-item {
+      padding: .6em 1em;
+      cursor: pointer;
+      font-size: .85rem;
+      color: var(--white);
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      transition: background .15s;
+    }
+    .suggestion-item:last-child { border-bottom: none; }
+    .suggestion-item:hover, .suggestion-item.active { background: rgba(245,166,35,.15); color: var(--accent); }
+    .suggestion-flag { margin-right: .4em; }
+
+    /* ── DIVIDER ── */
+    .divider { height: 1px; background: linear-gradient(to right, transparent, rgba(255,255,255,.12), transparent); margin: 0 1.5rem; }
+
+    /* ── FOOTER ── */
+    footer { text-align: center; padding: 2.5rem 1.5rem 3rem; font-size: .75rem; color: var(--muted); letter-spacing: .05em; }
+    footer strong { color: var(--accent); }
+
+    /* ── TELEGRAM FLOAT ── */
+    .tg-float {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100;
+      background: #26a5e4; color: #fff; border-radius: 50%;
+      width: 54px; height: 54px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 24px rgba(38,165,228,.45);
+      text-decoration: none; transition: transform .2s, box-shadow .2s;
+    }
+    .tg-float:hover { transform: scale(1.1); box-shadow: 0 10px 32px rgba(38,165,228,.6); }
+    .tg-float svg { width: 26px; fill: #fff; }
+    /* ── CALL MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,.6);
+      backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: #0f1f3a;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 20px;
+      padding: 2rem 1.5rem;
+      width: min(340px, 90vw);
+      text-align: center;
+      transform: translateY(20px);
+      transition: transform .25s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem; font-weight: 700;
+      margin-bottom: .4rem;
+    }
+    .modal-sub { font-size: .8rem; color: var(--muted); margin-bottom: 1.5rem; }
+    .call-option {
+      display: flex; align-items: center; gap: 1rem;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 12px; padding: 1rem 1.2rem;
+      text-decoration: none; color: var(--white);
+      margin-bottom: .75rem;
+      transition: background .2s, transform .2s;
+    }
+    .call-option:hover { background: rgba(245,166,35,.15); border-color: var(--accent); transform: scale(1.02); }
+    .call-option-icon { font-size: 1.4rem; }
+    .call-option-info { text-align: left; }
+    .call-option-info small { display: block; font-size: .6rem; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); }
+    .call-option-info strong { font-size: 1rem; font-weight: 700; }
+    .modal-close {
+      margin-top: .5rem; background: none; border: none;
+      color: var(--muted); font-size: .8rem; cursor: pointer;
+      letter-spacing: .05em; padding: .4em 1em;
+      transition: color .2s;
+    }
+    .modal-close:hover { color: var(--white); }
+  </style>
+</head>
+<body>
+
+<!-- ── INSTALL BANNER ── -->
+<div id="installBanner" style="display:none; position:fixed; bottom:5rem; left:1rem; right:1rem; z-index:300;
+  background:linear-gradient(135deg,#0d3b7c,#1a4fa0);
+  border:1px solid var(--accent); border-radius:16px;
+  padding:1rem 1.2rem; align-items:center; gap:1rem;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);">
+  <div style="font-size:2rem;">✈️</div>
+  <div style="flex:1;">
+    <div style="font-weight:700;font-size:.9rem;" data-ru="Установить приложение" data-uz="Ilovani o'rnatish">Установить приложение</div>
+    <div style="font-size:.75rem;color:var(--muted);" data-ru="Добавить на главный экран" data-uz="Bosh ekranga qo'shish">Добавить на главный экран</div>
+  </div>
+  <button class="btn btn-primary" onclick="installApp()" style="padding:.5em 1.2em;font-size:.8rem;" data-ru="Установить" data-uz="O'rnatish">Установить</button>
+  <button onclick="document.getElementById('installBanner').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;">✕</button>
+</div>
+
+<!-- ── LANG SWITCHER ── -->
+<div class="lang-switch">
+  <button class="lang-btn active" onclick="setLang('ru')">RU</button>
+  <button class="lang-btn" onclick="setLang('uz')">UZ</button>
+</div>
+
+<!-- ── TELEGRAM FLOAT ── -->
+<a class="tg-float" onclick="showTgMenu()" style="cursor:pointer;" title="Telegram">
+  <svg viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+</a>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="stars" id="stars"></div>
+  <div class="plane plane-1">
+    <div class="trail"></div>
+    <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+  </div>
+  <div class="plane plane-2">
+    <div class="trail"></div>
+    <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+  </div>
+  <div class="plane plane-3">
+    <div class="trail"></div>
+    <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+  </div>
+
+  <!-- floating tickets -->
+  <div class="ticket ticket-1">✈ MOW → DXB</div>
+  <div class="ticket ticket-2">✈ TAS → IST</div>
+  <div class="ticket ticket-3">✈ UGC → SVO</div>
+  <div class="ticket ticket-4">✈ DXB → LHR</div>
+  <div class="hero-content">
+    <div class="badge" data-ru="Авиакасса — Will Tour" data-uz="Aviakassa — Will Tour">Авиакасса — Will Tour</div>
+    <h1>AVIAKASSA<br/><span>WILL TOUR</span></h1>
+    <p class="tagline" data-ru="Ваш путь начинается здесь" data-uz="Sayohatingiz shu yerdan boshlanadi">Ваш путь начинается здесь</p>
+    <div class="hero-cta">
+      <button class="btn btn-primary" onclick="showCallMenu()" data-ru="📞 Позвонить" data-uz="📞 Qo'ng'iroq qilish">📞 Позвонить</button>
+      <button class="btn btn-outline" onclick="showTgMenu()" data-ru="✈️ Написать в Telegram" data-uz="✈️ Telegramga yozish">✈️ Написать в Telegram</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SEARCH FORM ── -->
+<section>
+  <div class="section-label" data-ru="Найдите свой рейс" data-uz="Resingizni toping">Найдите свой рейс</div>
+  <div class="section-title" data-ru="Поиск билетов" data-uz="Chipta qidirish">Поиск билетов</div>
+  <div class="search-box">
+
+    <div class="form-row-2">
+      <div class="form-group autocomplete-wrap">
+        <label class="form-label" data-ru="✈️ Откуда" data-uz="✈️ Qayerdan">✈️ Откуда</label>
+        <input class="form-input" id="from" type="text" autocomplete="off"
+          placeholder="Ташкент, Нукус..." oninput="showSuggestions('from',this.value)" onfocus="showSuggestions('from',this.value)" />
+        <div class="suggestions" id="from-list"></div>
+      </div>
+      <div class="form-group autocomplete-wrap">
+        <label class="form-label" data-ru="🛬 Куда" data-uz="🛬 Qayerga">🛬 Куда</label>
+        <input class="form-input" id="to" type="text" autocomplete="off"
+          placeholder="Москва, Дубай..." oninput="showSuggestions('to',this.value)" onfocus="showSuggestions('to',this.value)" />
+        <div class="suggestions" id="to-list"></div>
+      </div>
+    </div>
+
+    <div class="form-row-3">
+      <div class="form-group">
+        <label class="form-label" data-ru="📅 Туда" data-uz="📅 Borish">📅 Туда</label>
+        <input class="form-input" id="date1" type="date" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-ru="📅 Обратно" data-uz="📅 Qaytish">📅 Обратно</label>
+        <input class="form-input" id="date2" type="date" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-ru="👤 Пассажиры" data-uz="👤 Yo'lovchilar">👤 Пассажиры</label>
+        <div class="pax-box" id="paxBox" onclick="togglePax(event)">
+          <span id="paxSummary">1 взрослый</span>
+          <span style="color:var(--accent);font-size:.8rem;">▼</span>
+        </div>
+        <div class="pax-dropdown" id="paxDropdown">
+          <div class="pax-row">
+            <div>
+              <div class="pax-name" data-ru="Взрослые" data-uz="Kattalar">Взрослые</div>
+              <div class="pax-hint" data-ru="12+ лет" data-uz="12+ yosh">12+ лет</div>
+            </div>
+            <div class="pax-counter">
+              <button class="pax-btn" onclick="changePax('adult',-1)">−</button>
+              <span id="adult-count">1</span>
+              <button class="pax-btn" onclick="changePax('adult',1)">+</button>
+            </div>
+          </div>
+          <div class="pax-row">
+            <div>
+              <div class="pax-name" data-ru="Подростки" data-uz="O'smirlar">Подростки</div>
+              <div class="pax-hint" data-ru="6–11 лет" data-uz="6–11 yosh">6–11 лет</div>
+            </div>
+            <div class="pax-counter">
+              <button class="pax-btn" onclick="changePax('teen',-1)">−</button>
+              <span id="teen-count">0</span>
+              <button class="pax-btn" onclick="changePax('teen',1)">+</button>
+            </div>
+          </div>
+          <div class="pax-row">
+            <div>
+              <div class="pax-name" data-ru="Дети" data-uz="Bolalar">Дети</div>
+              <div class="pax-hint" data-ru="0–5 лет" data-uz="0–5 yosh">0–5 лет</div>
+            </div>
+            <div class="pax-counter">
+              <button class="pax-btn" onclick="changePax('child',-1)">−</button>
+              <span id="child-count">0</span>
+              <button class="pax-btn" onclick="changePax('child',1)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-row-2">
+      <div class="form-group">
+        <label class="form-label" data-ru="💺 Класс" data-uz="💺 Sinf">💺 Класс</label>
+        <select class="form-input" id="cls">
+          <option>Эконом</option>
+          <option>Бизнес</option>
+          <option>Первый класс</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-ru="📱 Ваш номер" data-uz="📱 Raqamingiz">📱 Ваш номер</label>
+        <input class="form-input" id="phone" type="tel" placeholder="+998 __ ___ __ __" />
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="submitSearch()" style="width:100%;justify-content:center;font-size:1rem;padding:1em;margin-top:.5rem;">
+      <span data-ru="🔍 Отправить заявку" data-uz="🔍 Ariza yuborish">🔍 Отправить заявку</span>
+    </button>
+  </div>
+
+  <div id="searchSuccess" style="display:none;margin-top:1.5rem;background:rgba(245,166,35,.1);border:1px solid var(--accent);border-radius:14px;padding:1.5rem;text-align:center;">
+    <div style="font-size:2.5rem;margin-bottom:.5rem;">✅</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold);margin-bottom:.4rem;" data-ru="Заявка принята!" data-uz="Ariza qabul qilindi!">Заявка принята!</div>
+    <div style="font-size:.85rem;color:var(--muted);" data-ru="Мы свяжемся с вами в ближайшее время" data-uz="Tez orada siz bilan bog'lanamiz">Мы свяжемся с вами в ближайшее время</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── CONTACTS ── -->
+<section>
+  <div class="section-label" data-ru="Как с нами связаться" data-uz="Biz bilan bog'lanish">Как с нами связаться</div>
+  <div class="section-title" data-ru="Контакты" data-uz="Kontaktlar">Контакты</div>
+  <div class="contact-grid">
+
+    <a class="contact-item" href="tel:+998914270044">
+      <div class="contact-icon">📞</div>
+      <div class="contact-text">
+        <small data-ru="Телефон 1" data-uz="Telefon 1">Телефон 1</small>
+        <strong>+998 91 427 00 44</strong>
+      </div>
+    </a>
+
+    <a class="contact-item" href="tel:+998999670077">
+      <div class="contact-icon">📞</div>
+      <div class="contact-text">
+        <small data-ru="Телефон 2" data-uz="Telefon 2">Телефон 2</small>
+        <strong>+998 99 967 00 77</strong>
+      </div>
+    </a>
+
+    <div class="contact-item">
+      <div class="contact-icon">🕐</div>
+      <div class="contact-text">
+        <small data-ru="Режим работы" data-uz="Ish vaqti">Режим работы</small>
+        <strong>09:00 — 19:00</strong>
+        <span data-ru="Пн — Сб (Вс — выходной)" data-uz="Du — Sha (Yak — dam olish)">Пн — Сб (Вс — выходной)</span>
+      </div>
+    </div>
+
+    <div class="contact-item" onclick="showTgMenu()" style="cursor:pointer;">
+      <div class="contact-icon">✈️</div>
+      <div class="contact-text">
+        <small>Telegram</small>
+        <strong>@aviakassa_Dinara / @aviakassa_Iroda</strong>
+        <span data-ru="Написать сейчас" data-uz="Hozir yozing">Написать сейчас</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ── MAP ── -->
+<section>
+  <div class="section-label" data-ru="Где нас найти" data-uz="Bizni qayerda topish mumkin">Где нас найти</div>
+  <div class="section-title" data-ru="Адрес" data-uz="Manzil">Адрес</div>
+  <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:2.5rem;text-align:center;">
+    <div style="font-size:3.5rem;margin-bottom:1rem;">📍</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gold);margin-bottom:.4rem;">WILL TOUR</div>
+    <div style="font-size:.85rem;color:var(--muted);margin-bottom:2rem;">41.554718, 60.631646</div>
+    <a class="btn btn-primary" href="https://maps.google.com/?q=41.554718,60.631646" target="_blank"
+       data-ru="🌍 Открыть в Google Maps" data-uz="🌍 Google Maps da ochish">🌍 Открыть в Google Maps</a>
+  </div>
+  <div style="margin-top:1rem;text-align:center;">
+    <a class="btn btn-outline" href="https://yandex.uz/maps/?pt=60.631646,41.554718&z=16&l=map" target="_blank"
+       data-ru="🗺️ Открыть в Яндекс Картах" data-uz="🗺️ Yandex Xaritada ochish">🗺️ Открыть в Яндекс Картах</a>
+  </div>
+</section>
+
+<!-- ── TELEGRAM MODAL ── -->
+<div class="modal-overlay" id="tgModal" onclick="hideTgMenu(event)">
+  <div class="modal">
+    <div class="modal-title" data-ru="Выберите аккаунт" data-uz="Akkauntni tanlang">Выберите аккаунт</div>
+    <div class="modal-sub" data-ru="Кому хотите написать?" data-uz="Kimga yozmoqchisiz?">Кому хотите написать?</div>
+    <a class="call-option" href="https://t.me/aviakassa_Dinara" target="_blank">
+      <div class="call-option-icon">✈️</div>
+      <div class="call-option-info">
+        <small>Динара</small>
+        <strong>@aviakassa_Dinara</strong>
+      </div>
+    </a>
+    <a class="call-option" href="https://t.me/aviakassa_Iroda" target="_blank">
+      <div class="call-option-icon">✈️</div>
+      <div class="call-option-info">
+        <small>Ирода</small>
+        <strong>@aviakassa_Iroda</strong>
+      </div>
+    </a>
+    <button class="modal-close" onclick="hideTgMenu()" data-ru="Закрыть" data-uz="Yopish">Закрыть</button>
+  </div>
+</div>
+<div class="modal-overlay" id="callModal" onclick="hideCallMenu(event)">
+  <div class="modal">
+    <div class="modal-title" data-ru="Выберите номер" data-uz="Raqamni tanlang">Выберите номер</div>
+    <div class="modal-sub" data-ru="Кому хотите позвонить?" data-uz="Kimga qo'ng'iroq qilmoqchisiz?">Кому хотите позвонить?</div>
+    <a class="call-option" href="tel:+998914270044">
+      <div class="call-option-icon">📞</div>
+      <div class="call-option-info">
+        <small data-ru="Телефон 1" data-uz="Telefon 1">Телефон 1</small>
+        <strong>+998 91 427 00 44</strong>
+      </div>
+    </a>
+    <a class="call-option" href="tel:+998999670077">
+      <div class="call-option-icon">📞</div>
+      <div class="call-option-info">
+        <small data-ru="Телефон 2" data-uz="Telefon 2">Телефон 2</small>
+        <strong>+998 99 967 00 77</strong>
+      </div>
+    </a>
+    <button class="modal-close" onclick="hideCallMenu()" data-ru="Закрыть" data-uz="Yopish">Закрыть</button>
+  </div>
+</div>
+
+
+<footer>
+  <strong>AVIAKASSA — WILL TOUR</strong><br/>
+  <span data-ru="© 2025 · Все права защищены" data-uz="© 2025 · Barcha huquqlar himoyalangan">© 2025 · Все права защищены</span>
+</footer>
+
+<script>
+  // ── PASSENGER COUNTER ──
+  const pax = { adult: 1, teen: 0, child: 0 };
+
+  function changePax(type, delta) {
+    event.stopPropagation();
+    pax[type] = Math.max(0, pax[type] + delta);
+    if (pax.adult < 1) pax.adult = 1;
+    document.getElementById(type + '-count').textContent = pax[type];
+    updatePaxSummary();
+  }
+
+  function updatePaxSummary() {
+    const lang = document.querySelector('.lang-btn.active')?.textContent === 'UZ' ? 'uz' : 'ru';
+    let parts = [];
+    if (lang === 'uz') {
+      if (pax.adult) parts.push(pax.adult + ' katta');
+      if (pax.teen) parts.push(pax.teen + ' o\'smir');
+      if (pax.child) parts.push(pax.child + ' bola');
+    } else {
+      if (pax.adult) parts.push(pax.adult + ' взр.');
+      if (pax.teen) parts.push(pax.teen + ' подр.');
+      if (pax.child) parts.push(pax.child + ' реб.');
+    }
+    document.getElementById('paxSummary').textContent = parts.join(', ');
+  }
+
+  function togglePax(e) {
+    e.stopPropagation();
+    document.getElementById('paxDropdown').classList.toggle('open');
+  }
+
+  document.addEventListener('click', () => {
+    document.getElementById('paxDropdown')?.classList.remove('open');
+  });
+
+  // ── CITY SUGGESTIONS ──
+  const cities = [
+    // Узбекистан
+    {n:'Ташкент', c:'🇺🇿', code:'TAS'}, {n:'Нукус', c:'🇺🇿', code:'NCU'},
+    {n:'Самарканд', c:'🇺🇿', code:'SKD'}, {n:'Бухара', c:'🇺🇿', code:'BHK'},
+    {n:'Фергана', c:'🇺🇿', code:'FEG'}, {n:'Наманган', c:'🇺🇿', code:'NMA'},
+    {n:'Андижан', c:'🇺🇿', code:'AZN'}, {n:'Карши', c:'🇺🇿', code:'KSQ'},
+    {n:'Термез', c:'🇺🇿', code:'TMZ'}, {n:'Ургенч', c:'🇺🇿', code:'UGC'},
+    // Россия
+    {n:'Москва', c:'🇷🇺', code:'SVO'}, {n:'Санкт-Петербург', c:'🇷🇺', code:'LED'},
+    {n:'Екатеринбург', c:'🇷🇺', code:'SVX'}, {n:'Новосибирск', c:'🇷🇺', code:'OVB'},
+    {n:'Казань', c:'🇷🇺', code:'KZN'}, {n:'Уфа', c:'🇷🇺', code:'UFA'},
+    // ОАЭ
+    {n:'Дубай', c:'🇦🇪', code:'DXB'}, {n:'Абу-Даби', c:'🇦🇪', code:'AUH'},
+    // Турция
+    {n:'Стамбул', c:'🇹🇷', code:'IST'}, {n:'Анталья', c:'🇹🇷', code:'AYT'},
+    {n:'Анкара', c:'🇹🇷', code:'ESB'},
+    // Казахстан
+    {n:'Алматы', c:'🇰🇿', code:'ALA'}, {n:'Астана', c:'🇰🇿', code:'NQZ'},
+    {n:'Шымкент', c:'🇰🇿', code:'CIT'},
+    // Корея, Китай, Япония
+    {n:'Сеул', c:'🇰🇷', code:'ICN'}, {n:'Пекин', c:'🇨🇳', code:'PEK'},
+    {n:'Токио', c:'🇯🇵', code:'NRT'}, {n:'Шанхай', c:'🇨🇳', code:'PVG'},
+    // Европа
+    {n:'Лондон', c:'🇬🇧', code:'LHR'}, {n:'Париж', c:'🇫🇷', code:'CDG'},
+    {n:'Берлин', c:'🇩🇪', code:'BER'}, {n:'Рим', c:'🇮🇹', code:'FCO'},
+    {n:'Барселона', c:'🇪🇸', code:'BCN'}, {n:'Амстердам', c:'🇳🇱', code:'AMS'},
+    {n:'Варшава', c:'🇵🇱', code:'WAW'}, {n:'Прага', c:'🇨🇿', code:'PRG'},
+    // Другие
+    {n:'Бангкок', c:'🇹🇭', code:'BKK'}, {n:'Куала-Лумпур', c:'🇲🇾', code:'KUL'},
+    {n:'Сингапур', c:'🇸🇬', code:'SIN'}, {n:'Нью-Йорк', c:'🇺🇸', code:'JFK'},
+    {n:'Доха', c:'🇶🇦', code:'DOH'}, {n:'Эр-Рияд', c:'🇸🇦', code:'RUH'},
+    {n:'Тбилиси', c:'🇬🇪', code:'TBS'}, {n:'Бишкек', c:'🇰🇬', code:'FRU'},
+    {n:'Баку', c:'🇦🇿', code:'GYD'}, {n:'Минск', c:'🇧🇾', code:'MSQ'},
+  ];
+
+  function showSuggestions(fieldId, val) {
+    const list = document.getElementById(fieldId + '-list');
+    if (!val || val.length < 1) { list.classList.remove('open'); return; }
+    const q = val.toLowerCase();
+    const matches = cities.filter(c =>
+      c.n.toLowerCase().includes(q) || c.code.toLowerCase().includes(q)
+    ).slice(0, 8);
+    if (!matches.length) { list.classList.remove('open'); return; }
+    list.innerHTML = matches.map(c =>
+      `<div class="suggestion-item" onmousedown="pickCity('${fieldId}','${c.n} (${c.code})')" ontouchstart="pickCity('${fieldId}','${c.n} (${c.code})')">
+        <span class="suggestion-flag">${c.c}</span>${c.n} <span style="color:var(--muted);font-size:.75rem">${c.code}</span>
+      </div>`
+    ).join('');
+    list.classList.add('open');
+  }
+
+  function pickCity(fieldId, val) {
+    document.getElementById(fieldId).value = val;
+    document.getElementById(fieldId + '-list').classList.remove('open');
+  }
+
+  document.addEventListener('click', e => {
+    document.querySelectorAll('.suggestions').forEach(s => s.classList.remove('open'));
+  });
+
+  // submitSearch
+  function submitSearch() {
+    const from = document.getElementById('from').value.trim();
+    const to = document.getElementById('to').value.trim();
+    const date1 = document.getElementById('date1').value;
+    const date2 = document.getElementById('date2').value;
+    const passengers = `${pax.adult} взр.${pax.teen ? ', '+pax.teen+' подр.' : ''}${pax.child ? ', '+pax.child+' реб.' : ''}`;
+    const cls = document.getElementById('cls').value;
+    const phone = document.getElementById('phone').value.trim();
+
+    if (!from || !to || !phone) {
+      alert('Пожалуйста, заполните: Откуда, Куда и Номер телефона');
+      return;
+    }
+
+    const text = `✈️ НОВАЯ ЗАЯВКА — AVIAKASSA WILL TOUR\n\n` +
+      `📍 Откуда: ${from}\n` +
+      `🛬 Куда: ${to}\n` +
+      `📅 Дата туда: ${date1 || 'не указано'}\n` +
+      `📅 Дата обратно: ${date2 || 'не указано'}\n` +
+      `👤 Пассажиры: ${passengers}\n` +
+      `💺 Класс: ${cls}\n` +
+      `📱 Телефон: ${phone}`;
+
+    const encoded = encodeURIComponent(text);
+    window.open(`https://t.me/aviakassa_Dinara?text=${encoded}`, '_blank');
+
+    document.getElementById('searchSuccess').style.display = 'block';
+    document.getElementById('searchSuccess').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('from').value = '';
+    document.getElementById('to').value = '';
+    document.getElementById('date1').value = '';
+    document.getElementById('date2').value = '';
+    document.getElementById('phone').value = '';
+  }
+
+  // ── PWA ──
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js');
+  }
+
+  let deferredPrompt;
+  const installBanner = document.getElementById('installBanner');
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBanner.style.display = 'flex';
+  });
+
+  function installApp() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        installBanner.style.display = 'none';
+        deferredPrompt = null;
+      });
+    }
+  }
+
+  window.addEventListener('appinstalled', () => {
+    installBanner.style.display = 'none';
+  });
+
+  // Stars
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 120; i++) {
+    const s = document.createElement('div');
+    const size = Math.random() * 2.5 + .5;
+    s.className = 'star';
+    s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${(Math.random()*3+2).toFixed(1)}s;animation-delay:${(Math.random()*4).toFixed(1)}s;`;
+    container.appendChild(s);
+  }
+
+  function showTgMenu() {
+    document.getElementById('tgModal').classList.add('open');
+  }
+  function hideTgMenu(e) {
+    if (!e || e.target === document.getElementById('tgModal') || e.target.classList.contains('modal-close')) {
+      document.getElementById('tgModal').classList.remove('open');
+    }
+  }
+
+  // Call modal
+  function showCallMenu() {
+    document.getElementById('callModal').classList.add('open');
+  }
+  function hideCallMenu(e) {
+    if (!e || e.target === document.getElementById('callModal') || e.target.classList.contains('modal-close')) {
+      document.getElementById('callModal').classList.remove('open');
+    }
+  }
+
+  // Language switcher
+  function setLang(lang) {
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.lang-btn[onclick="setLang('${lang}')"]`).classList.add('active');
+    document.querySelectorAll('[data-ru]').forEach(el => {
+      el.textContent = el.getAttribute('data-' + lang);
+    });
+  }
+</script>
+</body>
+</html>
